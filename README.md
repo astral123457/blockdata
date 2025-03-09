@@ -18,3 +18,5 @@ permissions:
   viewpassword.use:
     description: 'Permite administrador ver a senha caso esqueça'
     default: op
+
+https://www.youtube.com/watch?v=QHVc5ROWEpA
