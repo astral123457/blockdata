@@ -32,42 +32,50 @@ public class ChestLockListener implements Listener {
         if (block != null && block.getType() == Material.CHEST) {
             Player player = event.getPlayer();
             String blockLocation = block.getLocation().toString();
-            Chest chest = (Chest) block.getState();
 
-            long currentTime = System.currentTimeMillis(); // Obtenha o tempo atual
-            long lastSentTime = lastMessageSent.getOrDefault(player, 0L); // Obtenha o último tempo de envio da mensagem para o jogador
-            if (currentTime - lastSentTime < 1000) { // Verifique se passou menos de 1 segundo desde o último envio da mensagem
-                return; // Ignore este evento se a mensagem foi enviada há menos de 1 segundo
-            }
-
-            // Verifique se o baú está trancado
+            // Verifica se o baú está trancado
             if (lockedChests.containsKey(blockLocation)) {
-                // Verifique se o jogador está segurando uma etiqueta com a senha
-                ItemStack itemInHand = player.getInventory().getItemInMainHand();
-                if (itemInHand.getType() == Material.NAME_TAG && itemInHand.getItemMeta() != null) {
-                    String nameTag = itemInHand.getItemMeta().getDisplayName();
-                    if (nameTag.equals(lockedChests.get(blockLocation))) {
-                        // Abra o baú e trancar novamente depois de alguns segundos
-                        player.sendMessage(ChatColor.GREEN + "Baú aberto com a etiqueta!" + ChatColor.DARK_RED + " Será trancado novamente em 5 segundos.");
-                        new java.util.Timer().schedule(new java.util.TimerTask() {
-                            @Override
-                            public void run() {
-                                lockChest(chest, nameTag, player);
-                                player.sendMessage(ChatColor.GOLD + "Baú trancado novamente.");
-                            }
-                        }, 5000); // 5000 ms = 5 segundos
-                        lastMessageSent.put(player, currentTime); // Atualize o tempo do último envio da mensagem
-                        return;
+                long currentTime = System.currentTimeMillis();
+                long lastMessageTime = lastMessageSent.getOrDefault(player, 0L);
+
+                // Evita o envio de mensagens em menos de 5 segundos
+                if (currentTime - lastMessageTime >= 5000) { // 5000 ms = 5 segundos
+                    ItemStack itemInHand = player.getInventory().getItemInMainHand();
+                    if (itemInHand.getType() == Material.NAME_TAG && itemInHand.getItemMeta() != null) {
+                        String nameTag = itemInHand.getItemMeta().getDisplayName();
+                        if (nameTag.equals(lockedChests.get(blockLocation))) {
+                            // Desbloqueia o baú
+                            player.sendMessage(ChatColor.GREEN + "Baú destrancado com sucesso! Será trancado novamente em 5 segundos.");
+                            lockedChests.remove(blockLocation);
+
+                            new java.util.Timer().schedule(new java.util.TimerTask() {
+                                @Override
+                                public void run() {
+                                    lockChest((Chest) block.getState(), nameTag, player);
+                                    player.sendMessage(ChatColor.GOLD + "O baú foi trancado novamente.");
+                                }
+                            }, 5000); // Rebloqueio após 5 segundos
+                        } else {
+                            player.sendMessage(ChatColor.DARK_RED + "Senha incorreta. Use a etiqueta correta!");
+                        }
+                    } else {
+                        player.sendMessage(ChatColor.DARK_AQUA + "O baú está trancado. Segure a etiqueta correta ou use /unlock.");
                     }
+
+                    // Atualiza o tempo da última mensagem
+                    lastMessageSent.put(player, currentTime);
                 }
-                player.sendMessage(ChatColor.DARK_AQUA + "Este baú está trancado. Use a Chave ou /unlock <senha> para destrancá-lo.");
-                event.setCancelled(true);
+
+                event.setCancelled(true); // Cancela a interação com o baú
             } else {
                 player.sendMessage("Baú aberto! Use /lock <senha> para trancá-lo.");
             }
-            lastMessageSent.put(player, currentTime); // Atualize o tempo do último envio da mensagem
         }
     }
+
+
+
+
 
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
