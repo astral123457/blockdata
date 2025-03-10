@@ -2,3 +2,4 @@ org\exampleorg\example\pow4\Pow4\blockdata\ChestLockListener.class
 org\exampleorg\example\pow4\Pow4\blockdata\Blockdata.class
 org\exampleorg\example\pow4\Pow4\blockdata\ChestLockListener$1.class
 org\exampleorg\example\pow4\Pow4\blockdata\LockChestCommand.class
+org\exampleorg\example\pow4\Pow4\blockdata\MessageManager.class
