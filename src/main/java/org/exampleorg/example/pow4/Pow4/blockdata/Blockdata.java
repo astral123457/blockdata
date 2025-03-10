@@ -16,12 +16,22 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.sql.ResultSet;
+
+
+
+
 
 public final class Blockdata extends JavaPlugin {
 
     private static final String FOLDER_PATH = "plugins/blockdata";
     private static final String CONFIG_FILE = FOLDER_PATH + "/config.json";
     private static final String MESSAGES_FILE_PATH = FOLDER_PATH + "/messages.json";
+
+    private final LockedChests lockedChestsManager = new LockedChests();
+
+
+
 
     @Override
     public void onEnable() {
@@ -45,6 +55,7 @@ public final class Blockdata extends JavaPlugin {
 
         // Configuração do banco de dados
         setupDatabase();
+        loadLockedChests(); // Recarregar baús trancados
 
         // Carregar idioma
         String language = loadLanguage();
@@ -143,7 +154,8 @@ public final class Blockdata extends JavaPlugin {
              Statement stmt = conn.createStatement()) {
 
             String sql = "CREATE TABLE IF NOT EXISTS locked_chests (" +
-                    "location TEXT PRIMARY KEY, " +
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT, " + // ID auto-incremento
+                    "location TEXT NOT NULL UNIQUE, " + // UNIQUE para garantir local único
                     "password TEXT NOT NULL, " +
                     "player TEXT NOT NULL)";
             stmt.executeUpdate(sql);
@@ -154,6 +166,35 @@ public final class Blockdata extends JavaPlugin {
             e.printStackTrace();
         }
     }
+
+    public void loadLockedChests() {
+        String DB_URL = "jdbc:sqlite:plugins/blockdata/blockdata.db";
+
+        try (Connection conn = DriverManager.getConnection(DB_URL);
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT location, password, player FROM locked_chests")) {
+
+            while (rs.next()) {
+                String location = rs.getString("location"); // Obtém a localização do baú
+                String password = rs.getString("password"); // Obtém a senha do baú
+                String player = rs.getString("player");     // Obtém o jogador que trancou o baú
+
+                // Log para depurar o carregamento
+                System.out.println("Carregando baú: Localização = " + location + ", Senha = " + password + ", Jogador = " + player);
+
+                // Adiciona os dados ao mapa de baús trancados
+                lockedChestsManager.addLockedChest(location, password, player);
+            }
+
+            getLogger().info("Baús trancados carregados com sucesso!");
+
+        } catch (Exception e) {
+            getLogger().severe("Erro ao carregar os baús trancados: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+
 
 
 

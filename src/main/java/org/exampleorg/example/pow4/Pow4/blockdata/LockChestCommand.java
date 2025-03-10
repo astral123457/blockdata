@@ -2,6 +2,7 @@ package org.exampleorg.example.pow4.Pow4.blockdata;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
@@ -59,9 +60,8 @@ public class LockChestCommand implements CommandExecutor {
                                 "location", chest.getLocation().toString(),
                                 "password", password
                         );
-                        player.sendMessage(message);
+                        player.sendMessage(ChatColor.LIGHT_PURPLE + message);
 
-                        player.sendMessage("Baú trancado com sucesso!");
                     } else if (label.equalsIgnoreCase("unlock")) {
                         chestLockListener.unlockChest(player, chest, password);
                     }

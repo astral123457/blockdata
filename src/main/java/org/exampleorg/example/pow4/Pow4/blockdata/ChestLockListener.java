@@ -13,17 +13,23 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 
+
 import java.util.HashMap;
 import java.util.Map;
 
 public class ChestLockListener implements Listener {
-    private final Map<String, String> lockedChests;
-    private final Map<Player, Long> lastMessageSent; // Adicione este mapa para rastrear o último envio de mensagem a cada jogador
 
+    // Gerenciador de baús trancados
+    private final LockedChests lockedChestsManager;
+
+    // Mapa para rastrear o último envio de mensagem a cada jogador
+    private final Map<Player, Long> lastMessageSent;
+
+    // Construtor da classe
     public ChestLockListener(JavaPlugin plugin) {
-        this.lockedChests = new HashMap<>();
-        this.lastMessageSent = new HashMap<>(); // Inicialize o mapa
-        plugin.getServer().getPluginManager().registerEvents(this, plugin);
+        this.lockedChestsManager = new LockedChests(); // Inicialize o gerenciador de baús trancados
+        this.lastMessageSent = new HashMap<>(); // Inicialize o mapa de mensagens enviadas
+        plugin.getServer().getPluginManager().registerEvents(this, plugin); // Registra o listener
     }
 
     @EventHandler
@@ -32,27 +38,30 @@ public class ChestLockListener implements Listener {
         if (block != null && block.getType() == Material.CHEST) {
             Player player = event.getPlayer();
             String blockLocation = block.getLocation().toString();
+            long currentTime = System.currentTimeMillis();
+            long lastMessageTime = lastMessageSent.getOrDefault(player, 0L);
 
             // Verifica se o baú está trancado
-            if (lockedChests.containsKey(blockLocation)) {
-                long currentTime = System.currentTimeMillis();
-                long lastMessageTime = lastMessageSent.getOrDefault(player, 0L);
-
-                // Evita o envio de mensagens em menos de 5 segundos
-                if (currentTime - lastMessageTime >= 5000) { // 5000 ms = 5 segundos
+            if (lockedChestsManager.isLocked(blockLocation)) { // Verifica se o baú está trancado
+                if (currentTime - lastMessageTime >= 5000) { // Controle de intervalo de mensagens
                     ItemStack itemInHand = player.getInventory().getItemInMainHand();
                     if (itemInHand.getType() == Material.NAME_TAG && itemInHand.getItemMeta() != null) {
                         String nameTag = itemInHand.getItemMeta().getDisplayName();
-                        if (nameTag.equals(lockedChests.get(blockLocation))) {
-                            // Desbloqueia o baú
-                            player.sendMessage(ChatColor.GREEN + "Baú destrancado com sucesso! Será trancado novamente em 5 segundos.");
-                            lockedChests.remove(blockLocation);
+                        String originalPassword = lockedChestsManager.getPassword(blockLocation); // Obtém a senha original
 
+                        if (nameTag.equals(originalPassword)) { // Verifica se a senha está correta
+                            player.sendMessage(ChatColor.GREEN + "Baú destrancado com sucesso! Será trancado novamente em 5 segundos.");
+
+                            // Destranca o baú temporariamente
+                            unlockChest(player, (Chest) block.getState(), nameTag);
+
+                            // Armazena a senha original e agenda o trancamento automático
                             new java.util.Timer().schedule(new java.util.TimerTask() {
                                 @Override
                                 public void run() {
-                                    lockChest((Chest) block.getState(), nameTag, player);
-                                    player.sendMessage(ChatColor.GOLD + "O baú foi trancado novamente.");
+                                    // Tranca o baú novamente com a senha original
+                                    lockChest((Chest) block.getState(), originalPassword, player);
+                                    player.sendMessage(ChatColor.GOLD + "O baú foi trancado novamente com a senha original.");
                                 }
                             }, 5000); // Rebloqueio após 5 segundos
                         } else {
@@ -61,19 +70,17 @@ public class ChestLockListener implements Listener {
                     } else {
                         player.sendMessage(ChatColor.DARK_AQUA + "O baú está trancado. Segure a etiqueta correta ou use /unlock.");
                     }
-
-                    // Atualiza o tempo da última mensagem
-                    lastMessageSent.put(player, currentTime);
+                    lastMessageSent.put(player, currentTime); // Atualiza o tempo da última mensagem
                 }
-
-                event.setCancelled(true); // Cancela a interação com o baú
+                event.setCancelled(true); // Cancela a interação com o baú para impedir acesso sem autorização
             } else {
-                player.sendMessage("Baú aberto! Use /lock <senha> para trancá-lo.");
+                if (currentTime - lastMessageTime >= 5000) { // Controle de intervalo de mensagens
+                    player.sendMessage("Baú aberto! Use /lock <senha> para trancá-lo.");
+                    lastMessageSent.put(player, currentTime); // Atualiza o tempo da última mensagem
+                }
             }
         }
     }
-
-
 
 
 
@@ -82,23 +89,32 @@ public class ChestLockListener implements Listener {
         Block block = event.getBlock();
         if (block.getType() == Material.CHEST) {
             String blockLocation = block.getLocation().toString();
-            if (lockedChests.containsKey(blockLocation)) {
+
+            // Verifica usando lockedChestsManager
+            if (lockedChestsManager.isLocked(blockLocation)) {
                 event.setCancelled(true);
                 event.getPlayer().sendMessage("Você não pode destruir um baú trancado.");
             }
         }
     }
 
-    public void lockChest(Chest chest, String password, Player player) { // Torne o método público
+    public void lockChest(Chest chest, String password, Player player) {
         String blockLocation = chest.getBlock().getLocation().toString();
-        lockedChests.put(blockLocation, password);
+
+        // Adiciona ao mapa usando lockedChestsManager
+        lockedChestsManager.addLockedChest(blockLocation, password, player.getName());
 
         // Verifica e tranca o baú duplo, se houver
         Block adjacentBlock = getAdjacentChestBlock(chest.getBlock());
         if (adjacentBlock != null) {
             String adjacentBlockLocation = adjacentBlock.getLocation().toString();
-            lockedChests.put(adjacentBlockLocation, password);
+
+            // Também adiciona o baú adjacente
+            lockedChestsManager.addLockedChest(blockLocation, password, player.getName());
         }
+
+        // Opcional: Mensagem para o jogador
+        player.sendMessage(ChatColor.GOLD + "Baú trancado com sucesso!");
 
         // Verifica se o jogador já possui uma etiqueta com a senha
         boolean playerHasNameTag = false;
@@ -126,14 +142,16 @@ public class ChestLockListener implements Listener {
 
     public void unlockChest(Player player, Chest chest, String password) {
         String blockLocation = chest.getBlock().getLocation().toString();
-        if (lockedChests.containsKey(blockLocation) && lockedChests.get(blockLocation).equals(password)) {
-            lockedChests.remove(blockLocation);
+
+        // Verifica e remove usando lockedChestsManager
+        if (lockedChestsManager.isLocked(blockLocation) && lockedChestsManager.getPassword(blockLocation).equals(password)) {
+            lockedChestsManager.removeLockedChest(blockLocation);
 
             // Destranca o baú duplo, se houver
             Block adjacentBlock = getAdjacentChestBlock(chest.getBlock());
             if (adjacentBlock != null) {
                 String adjacentBlockLocation = adjacentBlock.getLocation().toString();
-                lockedChests.remove(adjacentBlockLocation);
+                lockedChestsManager.removeLockedChest(adjacentBlockLocation);
             }
 
             player.sendMessage("Baú destrancado com sucesso!");
@@ -142,9 +160,9 @@ public class ChestLockListener implements Listener {
         }
     }
 
-    public String getChestPassword(Chest chest) { // Novo método para obter a senha do baú
+    public String getChestPassword(Chest chest) { // Método para obter a senha do baú
         String blockLocation = chest.getBlock().getLocation().toString();
-        return lockedChests.get(blockLocation);
+        return lockedChestsManager.getPassword(blockLocation); // Usa lockedChestsManager
     }
 
     private Block getAdjacentChestBlock(Block block) {
@@ -163,4 +181,6 @@ public class ChestLockListener implements Listener {
         }
         return null;
     }
+
 }
+
