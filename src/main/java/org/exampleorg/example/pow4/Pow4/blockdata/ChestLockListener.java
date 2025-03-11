@@ -23,8 +23,6 @@ public class ChestLockListener implements Listener {
     // Gerenciador de baús trancados
     private final LockedChests lockedChestsManager;
 
-    // Mapa para rastrear o último envio de mensagem a cada jogador
-
     private final JavaPlugin plugin;
 
     // Construtor da classe
@@ -38,12 +36,6 @@ public class ChestLockListener implements Listener {
     // Recarregar os baús
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
-        MessageManager messageManager = new MessageManager();
-
-        // Idioma do jogador (defina conforme sua lógica)
-        String language = "br"; // Ou "en"
-
-        event.getPlayer().sendMessage(messageManager.getMessage("player_join_welcome", language));
         lockedChestsManager.loadLockedChests();
     }
 
@@ -57,7 +49,7 @@ public class ChestLockListener implements Listener {
             MessageManager messageManager = new MessageManager();
 
             // Idioma do jogador (defina conforme sua lógica)
-            String language = "br"; // Ou "en"
+            String language = "br"; // Pode mudar para "en" se necessário
 
             if (lockedChestsManager.isLocked(blockLocation)) {
                 ItemStack itemInHand = player.getInventory().getItemInMainHand();
@@ -66,7 +58,9 @@ public class ChestLockListener implements Listener {
                     String originalPassword = lockedChestsManager.getPassword(blockLocation);
 
                     if (nameTag.equals(originalPassword)) {
+                        // Mensagem e som de destravamento bem-sucedido
                         player.sendMessage(messageManager.getMessage("unlocked_temp", language, "password", originalPassword));
+                        player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 1.0f);
 
                         // Destranca o baú temporariamente
                         unlockChest(player, (Chest) block.getState(), nameTag);
@@ -75,19 +69,27 @@ public class ChestLockListener implements Listener {
                         Bukkit.getScheduler().runTaskLater(plugin, () -> {
                             lockChest((Chest) block.getState(), originalPassword, player);
                             player.sendMessage(ChatColor.AQUA + messageManager.getMessage("relock_chest", language));
+                            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, 0.5f); // Som para relock
                         }, 100L); // 100 ticks = 5 segundos
                     } else {
+                        // Mensagem e som de senha incorreta
                         player.sendMessage(ChatColor.RED + messageManager.getMessage("incorrect_password", language));
+                        player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
                     }
                 } else {
-                    player.sendMessage(ChatColor.GOLD + messageManager.getMessage("locked_chest", language));
+                    // Mensagem e som de baú trancado
+                    player.playSound(player.getLocation(), Sound.ENTITY_ENDER_DRAGON_GROWL, 1.0f, 0.8f); // Som para assustar "ladrões"
+                    //player.sendMessage(ChatColor.GOLD + messageManager.getMessage("locked_chest", language));
                 }
                 event.setCancelled(true);
             } else {
-                player.sendMessage(ChatColor.GREEN + messageManager.getMessage("unlock_chest", language, "password", "your_password"));
+                // Mensagem e som de baú destrancado
+                player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BELL, 1.0f, 1.2f); // Som para aviso de destravamento
+                //player.sendMessage(ChatColor.GREEN + messageManager.getMessage("unlock_chest", language, "password", "your_password"));
             }
         }
     }
+
 
 
 
@@ -161,18 +163,13 @@ public class ChestLockListener implements Listener {
             }
 
             player.sendMessage(messageManager.getMessage("unlock_chest", language));
+
             player.playNote(player.getLocation(), Instrument.GUITAR, Note.flat(0, Tone.A));
         } else {
             player.sendMessage(messageManager.getMessage(ChatColor.RED + "incorrect_password", language));
         }
     }
 
-
-
-    public String getChestPassword(Chest chest) { // Método para obter a senha do baú
-        String blockLocation = chest.getBlock().getLocation().toString();
-        return lockedChestsManager.getPassword(blockLocation); // Usa lockedChestsManager
-    }
 
     private Block getAdjacentChestBlock(Block block) {
         Material chestMaterial = Material.CHEST;

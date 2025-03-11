@@ -121,10 +121,6 @@ public final class Blockdata extends JavaPlugin {
                 nameTagReceivedMessage.addProperty("br", "Você recebeu uma etiqueta com a senha.");
                 nameTagReceivedMessage.addProperty("en", "You received a name tag with the password.");
 
-                JsonObject welcomeMessage = new JsonObject();
-                welcomeMessage.addProperty("br", "Bem-vindo ao servidor! Recarregando baús...");
-                welcomeMessage.addProperty("en", "Welcome to the server! Reloading chests...");
-
                 JsonObject providePasswordMessage = new JsonObject();
                 providePasswordMessage.addProperty("br", "Por favor, forneça uma senha.");
                 providePasswordMessage.addProperty("en", "Please provide a password.");
@@ -145,7 +141,6 @@ public final class Blockdata extends JavaPlugin {
                 messages.add("look_at_chest", lookAtChestMessage);
                 messages.add("chest_password", chestPasswordMessage);
                 messages.add("chest_not_locked", chestNotLockedMessage);
-                messages.add("player_join_welcome", welcomeMessage);
                 messages.add("block_break_denied", blockBreakMessage);
                 messages.add("lock_success", lockSuccessMessage);
                 messages.add("name_tag_received", nameTagReceivedMessage);

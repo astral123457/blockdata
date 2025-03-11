@@ -13,10 +13,6 @@ commands:
   unlock:
     description: 'Destranca o baú com uma senha'
     usage: /unlock <senha>
-  viewpassword:
-    description: 'Permite ao administrador ver a senha do baú'
-    usage: /viewpassword
-    permission: viewpassword.use
   reloadblockdata:
     description: Carrega todos os baús trancados do banco de dados
     usage: /reloadblockdata

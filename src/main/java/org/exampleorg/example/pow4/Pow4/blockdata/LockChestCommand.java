@@ -64,16 +64,6 @@ public class LockChestCommand implements CommandExecutor {
                     } else if (label.equalsIgnoreCase("unlock")) {
                         chestLockListener.unlockChest(player, chest, password);
                     }
-                } else if (label.equalsIgnoreCase("viewpassword") && player.hasPermission("admin.viewpassword")) {
-                    String chestPassword = chestLockListener.getChestPassword(chest);
-                    if (chestPassword != null) {
-                        player.sendMessage(messageManager.getMessage(
-                                "chest_password", language,
-                                "password", chestPassword
-                        ));
-                    } else {
-                        player.sendMessage(messageManager.getMessage("chest_not_locked", language));
-                    }
                 } else {
                     player.sendMessage(messageManager.getMessage("provide_password", language));
                 }
