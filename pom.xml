@@ -4,13 +4,12 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.exampleorg.example.pow4.Pow4</groupId>
-    <artifactId>blockdata</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <groupId>com.guia</groupId>
+    <artifactId>bk</artifactId>
+    <version>1.1</version>
     <packaging>jar</packaging>
 
-    <name>blockdata</name>
-
+    <name>bk</name>
     <properties>
         <java.version>21</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -80,17 +79,21 @@
         </dependency>
 
         <dependency>
-            <groupId>org.jetbrains</groupId>
-            <artifactId>annotations</artifactId>
-            <version>24.0.1</version> <!-- Use the latest version -->
-        </dependency>
-
-
-        <dependency>
             <groupId>org.xerial</groupId>
             <artifactId>sqlite-jdbc</artifactId>
             <version>3.36.0.3</version>
         </dependency>
+
+        <dependency>
+            <groupId>net.luckperms</groupId>
+            <artifactId>api</artifactId>
+            <version>5.4</version> <!-- Use a última versão disponível -->
+            <scope>provided</scope>
+        </dependency>
+
+
+
+
 
     </dependencies>
 </project>
