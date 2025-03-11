@@ -26,10 +26,8 @@ public class LockChestCommand implements CommandExecutor {
     public LockChestCommand(ChestLockListener chestLockListener) {
         this.chestLockListener = chestLockListener;
     }
+
     private static final Logger LOGGER = Logger.getLogger(LockChestCommand.class.getName());
-
-
-
 
     private String loadLanguage() {
         File configFile = new File("plugins/blockdata/config.json");
@@ -44,13 +42,10 @@ public class LockChestCommand implements CommandExecutor {
         return "br"; // Retorna "br" como idioma padrão
     }
 
-
-
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-
-        String language = loadLanguage();//funcao do tradutor
-        MessageManager messageManager = new MessageManager();//funcao do tradutor
+        String language = loadLanguage();
+        MessageManager messageManager = new MessageManager();
 
         if (sender instanceof Player player) {
             Block block = player.getTargetBlockExact(5);
@@ -60,35 +55,34 @@ public class LockChestCommand implements CommandExecutor {
                     String password = args[0];
                     if (label.equalsIgnoreCase("lock")) {
                         chestLockListener.lockChest(chest, password, player);
-
-                        String message = messageManager.getMessage(// traducao complex
+                        String message = messageManager.getMessage(
                                 "lock_chest", language,
                                 "location", chest.getLocation().toString(),
                                 "password", password
                         );
                         player.sendMessage(ChatColor.LIGHT_PURPLE + message);
-
                     } else if (label.equalsIgnoreCase("unlock")) {
                         chestLockListener.unlockChest(player, chest, password);
                     }
                 } else if (label.equalsIgnoreCase("viewpassword") && player.hasPermission("admin.viewpassword")) {
                     String chestPassword = chestLockListener.getChestPassword(chest);
                     if (chestPassword != null) {
-                        player.sendMessage("A senha deste baú é: " + chestPassword);
+                        player.sendMessage(messageManager.getMessage(
+                                "chest_password", language,
+                                "password", chestPassword
+                        ));
                     } else {
-                        player.sendMessage("Este baú não está trancado.");
+                        player.sendMessage(messageManager.getMessage("chest_not_locked", language));
                     }
                 } else {
-                    player.sendMessage("Por favor, forneça uma senha.");
+                    player.sendMessage(messageManager.getMessage("provide_password", language));
                 }
                 return true;
             } else {
-                player.sendMessage("Olhe para um baú para trancá-lo, destrancá-lo ou ver a senha.");
+                player.sendMessage(messageManager.getMessage("look_at_chest", language));
             }
         }
         return false;
     }
-
-
-
 }
+

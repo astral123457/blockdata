@@ -3,6 +3,7 @@ package org.exampleorg.example.pow4.Pow4.blockdata;
 import org.bukkit.plugin.java.JavaPlugin;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.google.gson.GsonBuilder;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -67,7 +68,11 @@ public final class Blockdata extends JavaPlugin {
                 JsonObject defaultConfig = new JsonObject();
                 defaultConfig.addProperty("enabled", true);
                 defaultConfig.addProperty("language", "br");
-                new Gson().toJson(defaultConfig, writer);
+
+                // Gson com Pretty Printing
+                Gson gson = new GsonBuilder().setPrettyPrinting().create();
+                gson.toJson(defaultConfig, writer);
+
                 getLogger().info("Arquivo config.json criado com configurações padrão.");
             } catch (IOException e) {
                 getLogger().severe("Erro ao criar config.json: " + e.getMessage());
@@ -75,6 +80,7 @@ public final class Blockdata extends JavaPlugin {
         }
 
         // Criação de messages.json
+
         File messagesFile = new File(MESSAGES_FILE);
         if (!messagesFile.exists()) {
             try (FileWriter writer = new FileWriter(messagesFile)) {
@@ -83,11 +89,76 @@ public final class Blockdata extends JavaPlugin {
                 JsonObject unlockMessages = new JsonObject();
 
                 lockMessages.addProperty("br", "Baú trancado com a senha: {password}.");
+                lockMessages.addProperty("en", "Chest locked with password: {password}.");
                 unlockMessages.addProperty("br", "Baú destrancado com sucesso!");
+                unlockMessages.addProperty("en", "Chest successfully unlocked!");
 
+                JsonObject incorrectPasswordMessage = new JsonObject();
+                incorrectPasswordMessage.addProperty("br", "Senha incorreta. Use a etiqueta correta!");
+                incorrectPasswordMessage.addProperty("en", "Incorrect password. Use the correct name tag!");
+
+                JsonObject lockedChestMessage = new JsonObject();
+                lockedChestMessage.addProperty("br", "O baú está trancado. Segure a etiqueta correta ou use /unlock.");
+                lockedChestMessage.addProperty("en", "The chest is locked. Hold the correct name tag or use /unlock.");
+
+                JsonObject relockChestMessage = new JsonObject();
+                relockChestMessage.addProperty("br", "O baú foi trancado novamente com a senha original.");
+                relockChestMessage.addProperty("en", "The chest has been relocked with the original password.");
+
+                JsonObject unlockedTempMessage = new JsonObject();
+                unlockedTempMessage.addProperty("br", "Baú destrancado com sucesso! Será trancado novamente em 5 segundos.");
+                unlockedTempMessage.addProperty("en", "Chest successfully unlocked! It will be relocked in 5 seconds.");
+
+                JsonObject blockBreakMessage = new JsonObject();
+                blockBreakMessage.addProperty("br", "Você não pode destruir um baú trancado.");
+                blockBreakMessage.addProperty("en", "You cannot destroy a locked chest.");
+
+                JsonObject lockSuccessMessage = new JsonObject();
+                lockSuccessMessage.addProperty("br", "Baú trancado com sucesso!");
+                lockSuccessMessage.addProperty("en", "Chest successfully locked!");
+
+                JsonObject nameTagReceivedMessage = new JsonObject();
+                nameTagReceivedMessage.addProperty("br", "Você recebeu uma etiqueta com a senha.");
+                nameTagReceivedMessage.addProperty("en", "You received a name tag with the password.");
+
+                JsonObject welcomeMessage = new JsonObject();
+                welcomeMessage.addProperty("br", "Bem-vindo ao servidor! Recarregando baús...");
+                welcomeMessage.addProperty("en", "Welcome to the server! Reloading chests...");
+
+                JsonObject providePasswordMessage = new JsonObject();
+                providePasswordMessage.addProperty("br", "Por favor, forneça uma senha.");
+                providePasswordMessage.addProperty("en", "Please provide a password.");
+
+                JsonObject lookAtChestMessage = new JsonObject();
+                lookAtChestMessage.addProperty("br", "Olhe para um baú para trancá-lo, destrancá-lo ou ver a senha.");
+                lookAtChestMessage.addProperty("en", "Look at a chest to lock, unlock, or view its password.");
+
+                JsonObject chestPasswordMessage = new JsonObject();
+                chestPasswordMessage.addProperty("br", "A senha deste baú é: {password}.");
+                chestPasswordMessage.addProperty("en", "The password for this chest is: {password}.");
+
+                JsonObject chestNotLockedMessage = new JsonObject();
+                chestNotLockedMessage.addProperty("br", "Este baú não está trancado.");
+                chestNotLockedMessage.addProperty("en", "This chest is not locked.");
+
+                messages.add("provide_password", providePasswordMessage);
+                messages.add("look_at_chest", lookAtChestMessage);
+                messages.add("chest_password", chestPasswordMessage);
+                messages.add("chest_not_locked", chestNotLockedMessage);
+                messages.add("player_join_welcome", welcomeMessage);
+                messages.add("block_break_denied", blockBreakMessage);
+                messages.add("lock_success", lockSuccessMessage);
+                messages.add("name_tag_received", nameTagReceivedMessage);
                 messages.add("lock_chest", lockMessages);
                 messages.add("unlock_chest", unlockMessages);
-                new Gson().toJson(messages, writer);
+                messages.add("incorrect_password", incorrectPasswordMessage);
+                messages.add("locked_chest", lockedChestMessage);
+                messages.add("relock_chest", relockChestMessage);
+                messages.add("unlocked_temp", unlockedTempMessage);
+
+                // Gson com Pretty Printing
+                Gson gson = new GsonBuilder().setPrettyPrinting().create();
+                gson.toJson(messages, writer);
 
                 getLogger().info("Arquivo messages.json criado com mensagens padrão.");
             } catch (IOException e) {
@@ -96,7 +167,9 @@ public final class Blockdata extends JavaPlugin {
         }
     }
 
-    private boolean isPluginEnabled() {
+
+
+        private boolean isPluginEnabled() {
         try {
             String content = new String(Files.readAllBytes(Paths.get(CONFIG_FILE)));
             JsonObject config = new Gson().fromJson(content, JsonObject.class);
@@ -136,7 +209,7 @@ public final class Blockdata extends JavaPlugin {
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
         if (cmd.getName().equalsIgnoreCase("reloadblockdata")) {
             lockedChestsManager.loadLockedChests(); // Recarrega os dados
-            sender.sendMessage(ChatColor.GREEN + "Baús recarregados com sucesso!");
+            sender.sendMessage(ChatColor.GREEN + "Baus recarregados com sucesso!");
             return true;
         }
         return false;

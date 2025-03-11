@@ -6,40 +6,40 @@ import com.google.gson.JsonObject;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class MessageManager {
 
-    private static final String MESSAGES_FILE_PATH = "plugins/blockdata/messages.json";private JsonObject messages;
+    private static final String MESSAGES_FILE_PATH = "plugins/blockdata/messages.json";
+
+    private JsonObject messages;
+
+    private static final Logger LOGGER = Logger.getLogger(MessageManager.class.getName());
+
 
     public MessageManager() {
         loadMessages();
     }
 
     private void loadMessages() {
-        File file = new File("plugins/blockdata/messages.json");
+        File file = new File(MESSAGES_FILE_PATH);
         if (file.exists()) {
             try (FileReader reader = new FileReader(file)) {
                 messages = new Gson().fromJson(reader, JsonObject.class);
             } catch (IOException e) {
-                e.printStackTrace();
+                LOGGER.log(Level.SEVERE, "E", e);
             }
         } else {
-            System.out.println("Arquivo de mensagens não encontrado!");
+            System.out.println("Messages file not found!");
             messages = new JsonObject(); // Evitar erros se o arquivo não existir
         }
     }
 
-    public void createDefaultMessages() {
-        File file = new File(MESSAGES_FILE_PATH);
-        if (!file.exists()) {
-        }
-
-
-    }
 
     public String getMessage(String key, String language, String... placeholders) {
         if (messages == null || !messages.has(key)) {
-            return "Mensagem não encontrada!";
+            return "Message not found!";
         }
 
         String message = messages.getAsJsonObject(key).get(language).getAsString();
