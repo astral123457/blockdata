@@ -15,8 +15,6 @@ public class MessageManager {
         loadMessages();
     }
 
-
-
     private void loadMessages() {
         File file = new File("plugins/blockdata/messages.json");
         if (file.exists()) {

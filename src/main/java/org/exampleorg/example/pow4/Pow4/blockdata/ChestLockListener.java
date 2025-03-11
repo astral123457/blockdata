@@ -1,7 +1,6 @@
 package org.exampleorg.example.pow4.Pow4.blockdata;
 
-import org.bukkit.ChatColor;
-import org.bukkit.Material;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
 import org.bukkit.entity.Player;
@@ -12,7 +11,11 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.Note.Tone;
 
+import org.bukkit.event.player.PlayerJoinEvent;
+
+import org.bukkit.ChatColor;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -25,11 +28,24 @@ public class ChestLockListener implements Listener {
     // Mapa para rastrear o último envio de mensagem a cada jogador
     private final Map<Player, Long> lastMessageSent;
 
+    private final JavaPlugin plugin;
+
     // Construtor da classe
     public ChestLockListener(JavaPlugin plugin) {
         this.lockedChestsManager = new LockedChests(); // Inicialize o gerenciador de baús trancados
         this.lastMessageSent = new HashMap<>(); // Inicialize o mapa de mensagens enviadas
         plugin.getServer().getPluginManager().registerEvents(this, plugin); // Registra o listener
+        this.plugin = plugin;
+    }
+
+
+    @EventHandler
+    public void onPlayerJoin(PlayerJoinEvent event) {
+        // Exemplo: Apenas recarrega ao primeiro jogador entrar, se necessário
+        event.getPlayer().sendMessage("Bem-vindo ao servidor! Recarregando baús...");
+        //loadLockedChests();
+        lockedChestsManager.loadLockedChests(); // Recarregar os baús
+        System.out.println("Baús recarregados ao jogador entrar no servidor.");
     }
 
     @EventHandler
@@ -42,7 +58,7 @@ public class ChestLockListener implements Listener {
             long lastMessageTime = lastMessageSent.getOrDefault(player, 0L);
 
             // Verifica se o baú está trancado
-            if (lockedChestsManager.isLocked(blockLocation)) { // Verifica se o baú está trancado
+            if (lockedChestsManager.isLocked(blockLocation)) {
                 if (currentTime - lastMessageTime >= 5000) { // Controle de intervalo de mensagens
                     ItemStack itemInHand = player.getInventory().getItemInMainHand();
                     if (itemInHand.getType() == Material.NAME_TAG && itemInHand.getItemMeta() != null) {
@@ -55,20 +71,19 @@ public class ChestLockListener implements Listener {
                             // Destranca o baú temporariamente
                             unlockChest(player, (Chest) block.getState(), nameTag);
 
-                            // Armazena a senha original e agenda o trancamento automático
-                            new java.util.Timer().schedule(new java.util.TimerTask() {
-                                @Override
-                                public void run() {
-                                    // Tranca o baú novamente com a senha original
-                                    lockChest((Chest) block.getState(), originalPassword, player);
-                                    player.sendMessage(ChatColor.GOLD + "O baú foi trancado novamente com a senha original.");
-                                }
-                            }, 5000); // Rebloqueio após 5 segundos
+                            // Usa o BukkitScheduler para agendar o trancamento automático
+                            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                                lockChest((Chest) block.getState(), originalPassword, player);
+                                player.sendMessage(ChatColor.GOLD + "O baú foi trancado novamente com a senha original.");
+                                //playDoReMi(player);
+                                player.playNote(player.getLocation(), Instrument.GUITAR, Note.flat(0, Tone.G));
+                            }, 100L); // 100 ticks = 5 segundos
                         } else {
                             player.sendMessage(ChatColor.DARK_RED + "Senha incorreta. Use a etiqueta correta!");
                         }
                     } else {
                         player.sendMessage(ChatColor.DARK_AQUA + "O baú está trancado. Segure a etiqueta correta ou use /unlock.");
+                        player.playNote(player.getLocation(), Instrument.PIANO, Note.flat(0, Tone.C));
                     }
                     lastMessageSent.put(player, currentTime); // Atualiza o tempo da última mensagem
                 }
@@ -81,8 +96,6 @@ public class ChestLockListener implements Listener {
             }
         }
     }
-
-
 
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
@@ -107,8 +120,6 @@ public class ChestLockListener implements Listener {
         // Verifica e tranca o baú duplo, se houver
         Block adjacentBlock = getAdjacentChestBlock(chest.getBlock());
         if (adjacentBlock != null) {
-            String adjacentBlockLocation = adjacentBlock.getLocation().toString();
-
             // Também adiciona o baú adjacente
             lockedChestsManager.addLockedChest(blockLocation, password, player.getName());
         }
@@ -155,6 +166,7 @@ public class ChestLockListener implements Listener {
             }
 
             player.sendMessage("Baú destrancado com sucesso!");
+            player.playNote(player.getLocation(), Instrument.GUITAR, Note.flat(0, Tone.A));
         } else {
             player.sendMessage("Senha incorreta.");
         }
@@ -181,6 +193,8 @@ public class ChestLockListener implements Listener {
         }
         return null;
     }
+
+
 
 }
 

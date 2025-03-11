@@ -5,34 +5,40 @@ import com.google.gson.JsonObject;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
-import org.bukkit.block.Chest;
-import org.bukkit.command.Command;
+import org.bukkit.block.Chest; // Para trabalhar com o tipo Chest
+import org.bukkit.entity.Player;
+import org.bukkit.command.Command; // Para lidar com comandos em plugins
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+
 
 import java.io.File;//funcao do tradutor
 import java.io.FileReader;//funcao do tradutor
 import java.io.IOException;//funcao do tradutor
 
+
 public class LockChestCommand implements CommandExecutor {
     private final ChestLockListener chestLockListener;
-    private final String databasePath = "jdbc:sqlite:plugins/blockdata/blockdata.db";
-    private final String configPath = "plugins/blockdata/config.json";//funcao do tradutor
 
     public LockChestCommand(ChestLockListener chestLockListener) {
         this.chestLockListener = chestLockListener;
     }
+    private static final Logger LOGGER = Logger.getLogger(LockChestCommand.class.getName());
+
+
 
 
     private String loadLanguage() {
-        File configFile = new File(configPath);
+        File configFile = new File("plugins/blockdata/config.json");
         if (configFile.exists()) {
             try (FileReader reader = new FileReader(configFile)) {
                 JsonObject config = new Gson().fromJson(reader, JsonObject.class);
                 return config.get("language").getAsString(); // Retorna o idioma configurado
             } catch (IOException e) {
-                e.printStackTrace();
+                LOGGER.log(Level.SEVERE, "An error occurred", e);
             }
         }
         return "br"; // Retorna "br" como idioma padrão
@@ -82,4 +88,7 @@ public class LockChestCommand implements CommandExecutor {
         }
         return false;
     }
+
+
+
 }
