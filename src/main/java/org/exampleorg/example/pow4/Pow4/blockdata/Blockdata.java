@@ -24,7 +24,6 @@ public final class Blockdata extends JavaPlugin {
     private static final String CONFIG_FILE = FOLDER_PATH + "/config.json";
     private static final String MESSAGES_FILE = FOLDER_PATH + "/messages.json";
 
-    private LockedChests lockedChestsManager;
 
     @Override
     public void onEnable() {
@@ -37,7 +36,6 @@ public final class Blockdata extends JavaPlugin {
             return;
         }
 
-        lockedChestsManager = new LockedChests(); // Instancia o gerenciador
         registerListeners(); // Registra eventos
         registerCommands(); // Registra comandos
 
@@ -198,16 +196,6 @@ public final class Blockdata extends JavaPlugin {
         this.getCommand("reloadblockdata").setExecutor(this);
 
         getLogger().info("Comandos registrados.");
-    }
-
-    @Override
-    public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
-        if (cmd.getName().equalsIgnoreCase("reloadblockdata")) {
-            lockedChestsManager.loadLockedChests(); // Recarrega os dados
-            sender.sendMessage(ChatColor.GREEN + "Baus recarregados com sucesso!");
-            return true;
-        }
-        return false;
     }
 
     private void setupDatabase() {

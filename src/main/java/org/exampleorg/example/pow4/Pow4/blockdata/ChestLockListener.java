@@ -11,11 +11,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.Note.Tone;
 import org.bukkit.Material;
-import org.bukkit.block.BlockState;
-import org.bukkit.block.Skull;
-import org.bukkit.inventory.Inventory;
 
 
 
@@ -32,6 +28,8 @@ public class ChestLockListener implements Listener {
 
     private final JavaPlugin plugin;
 
+    private boolean isLoaded = false;
+
     // Construtor da classe
     public ChestLockListener(JavaPlugin plugin) {
         this.lockedChestsManager = new LockedChests(); // Inicialize o gerenciador de baús trancados
@@ -43,7 +41,12 @@ public class ChestLockListener implements Listener {
     // Recarregar os baús
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
-        lockedChestsManager.loadLockedChests();
+        if (!isLoaded) { // Verifica se já foi carregado
+            lockedChestsManager.loadLockedChests();
+            isLoaded = true; // Marca como carregado
+        } else {
+            System.out.println("Os baus ja estao carregados na memoria.");
+        }
     }
 
 
@@ -95,13 +98,7 @@ public class ChestLockListener implements Listener {
                             // Define o bloco como uma cabeça de dragão
                             aboveBlock.setType(Material.DRAGON_HEAD);
 
-                            // Configura a rotação da cabeça
-                            BlockState state = aboveBlock.getState();
-                            if (state instanceof Skull skull) {
-                                // Define a rotação baseada na direção do jogador
-                                skull.setRotation(player.getFacing().getOppositeFace()); // Gira para a direção oposta
-                                skull.update();
-                            }
+
 
                         }
 
@@ -145,16 +142,32 @@ public class ChestLockListener implements Listener {
         MessageManager messageManager = new MessageManager();
         String language = "br"; // Ou "en"
 
+        // Obtém a localização do bloco como string
         String blockLocation = chest.getBlock().getLocation().toString();
-        lockedChestsManager.addLockedChest(blockLocation, password, player.getName());
 
-        Block adjacentBlock = getAdjacentChestBlock(chest.getBlock());
-        if (adjacentBlock != null) {
-            lockedChestsManager.addLockedChest(blockLocation, password, player.getName());
+        // Verifica se o baú já está trancado
+        if (lockedChestsManager.isLocked(blockLocation)) {
+            player.sendMessage(ChatColor.RED + messageManager.getMessage("lock_already_exists", language));
+            return; // Sai do método para evitar sobrescrever
         }
 
+        // Adiciona o baú ao gerenciador de baús trancados
+        lockedChestsManager.addLockedChest(blockLocation, password, player.getName());
+
+        // Verifica se há um baú adjacente e adiciona ao gerenciador, se necessário
+        Block adjacentBlock = getAdjacentChestBlock(chest.getBlock());
+        if (adjacentBlock != null) {
+            String adjacentLocation = adjacentBlock.getLocation().toString();
+
+            if (!lockedChestsManager.isLocked(adjacentLocation)) {
+                lockedChestsManager.addLockedChest(adjacentLocation, password, player.getName());
+            }
+        }
+
+        // Envia mensagem ao jogador confirmando o sucesso
         player.sendMessage(ChatColor.GREEN + messageManager.getMessage("lock_success", language));
 
+        // Verifica se o jogador já possui uma etiqueta com o nome/senha
         boolean playerHasNameTag = false;
         for (ItemStack item : player.getInventory().getContents()) {
             if (item != null && item.getType() == Material.NAME_TAG &&
@@ -165,6 +178,7 @@ public class ChestLockListener implements Listener {
             }
         }
 
+        // Se o jogador não possui a etiqueta, cria e adiciona ao inventário
         if (!playerHasNameTag) {
             ItemStack nameTag = new ItemStack(Material.NAME_TAG);
             ItemMeta meta = nameTag.getItemMeta();
@@ -178,24 +192,33 @@ public class ChestLockListener implements Listener {
         }
     }
 
+
+
+    // Método para desbloquear um baú
     public void unlockChest(Player player, Chest chest, String password) {
-        MessageManager messageManager = new MessageManager();
-        String language = "br"; // Ou "en"
-
         String blockLocation = chest.getBlock().getLocation().toString();
-        if (lockedChestsManager.isLocked(blockLocation) && lockedChestsManager.getPassword(blockLocation).equals(password)) {
-            lockedChestsManager.removeLockedChest(blockLocation);
 
-            Block adjacentBlock = getAdjacentChestBlock(chest.getBlock());
-            if (adjacentBlock != null) {
-                String adjacentBlockLocation = adjacentBlock.getLocation().toString();
-                lockedChestsManager.removeLockedChest(adjacentBlockLocation);
-            }
-
-            player.playNote(player.getLocation(), Instrument.GUITAR, Note.flat(0, Tone.A));
-        } else {
-            player.sendMessage(messageManager.getMessage(ChatColor.RED + "incorrect_password", language));
+        // Verifica se o baú está trancado
+        if (!lockedChestsManager.isLocked(blockLocation)) {
+            player.sendMessage(ChatColor.YELLOW + "Este baú não está trancado!");
+            return; // Sai do método, pois o baú já está destrancado
         }
+
+        // Obtém a senha associada ao baú
+        String storedPassword = lockedChestsManager.getPassword(blockLocation);
+
+        // Verifica se a senha está correta
+        if (storedPassword != null && storedPassword.equals(password)) {
+            lockedChestsManager.removeLockedChest(blockLocation, password);
+            player.sendMessage(ChatColor.GREEN + "Baú desbloqueado com sucesso!");
+        } else {
+            player.sendMessage(ChatColor.RED + "Senha incorreta ou baú não encontrado!");
+        }
+    }
+
+    public String getChestPassword(Chest chest) { // Método para obter a senha do baú
+        String blockLocation = chest.getBlock().getLocation().toString();
+        return lockedChestsManager.getPassword(blockLocation); // Usa lockedChestsManager
     }
 
 

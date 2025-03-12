@@ -44,6 +44,8 @@ public class LockedChests {
     //public static final String CHEST_REMOVE_ERROR_BR = "Erro ao remover o baú trancado do banco de dados.";
     public static final String CHEST_REMOVE_ERROR_EN = "Error removing the locked chest from the database.";
 
+    private boolean isLoaded = false; // Flag para rastrear se os baús já foram carregados
+
 
     // Construtor para inicializar o mapa e configurar o banco de dados
     public LockedChests() {
@@ -73,16 +75,30 @@ public class LockedChests {
 
     // Método para adicionar um bau trancado
     public void addLockedChest(String location, String password, String player) {
-        // Adiciona ao mapa na memória
+        // Validação dos dados
+        if (location == null || password == null || player == null) {
+            System.out.println("Dados inválidos fornecidos. O registro foi ignorado.");
+            return; // Sai do método
+        }
+
+        // Verifica duplicatas
+        if (lockedChests.containsKey(location)) {
+            System.out.printf("Registro duplicado ignorado: Localização = %s%n", location);
+            return; // Sai do método para evitar sobrescrever
+        }
+
+        // Adiciona ao mapa e persiste no banco
         lockedChests.put(location, password);
-        // Salva no banco de dados
         saveLockedChest(location, password, player);
+        System.out.printf("Baú trancado: Localização = %s, Jogador = %s%n", location, player);
     }
 
+
     // Método para remover um bau trancado
-    public void removeLockedChest(String location) {
+    public void removeLockedChest(String location, String password) {
         // Remove do mapa na memória
-        lockedChests.remove(location);
+        lockedChests.remove(location, password);
+        System.out.println("Bau removido do local: ");
         // Remove do banco de dados
         deleteLockedChestFromDatabase(location);
     }
@@ -99,6 +115,11 @@ public class LockedChests {
 
     // Método para carregar baus do banco de dados na memória
     public void loadLockedChests() {
+        if (isLoaded) {
+            System.out.println("Os baús já foram carregados anteriormente. O carregamento será ignorado.");
+            return; // Sai do método, pois já foi carregado
+        }
+
         try (Connection conn = DriverManager.getConnection(DB_URL);
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery("SELECT location, password, player FROM locked_chests")) {
@@ -106,21 +127,57 @@ public class LockedChests {
             while (rs.next()) {
                 String location = rs.getString("location");
                 String password = rs.getString("password");
-                String player = rs.getString("player");
 
-                // Adiciona ao mapa na memória
-                lockedChests.put(location, password);
-
-                System.out.printf(CHEST_LOADED_EN + "Location = %s, Password = %s, Player = %s%n",
-                        location, password, player);
+                // Verifica se já existe no mapa
+                if (!lockedChests.containsKey(location)) {
+                    lockedChests.put(location, password);
+                } else {
+                    System.out.printf("A localização %s já existe no mapa.%n", location);
+                }
             }
 
+            System.out.println("Todos os itens foram processados com sucesso.");
             System.out.println(CHESTS_LOADED_SUCCESS_EN);
+            isLoaded = true; // Marca como carregado após o sucesso
+
+            // Chama o método de remoção de duplicatas no final para garantir consistência
+            removeDuplicateEntries();
 
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, CHEST_SAVE_ERROR_EN, e);
         }
     }
+
+
+
+    public void removeDuplicateEntries() {
+        Map<String, String> tempMap = new HashMap<>();
+
+        try (Connection conn = DriverManager.getConnection(DB_URL);
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT location, password FROM locked_chests")) {
+
+            while (rs.next()) {
+                String location = rs.getString("location");
+                String password = rs.getString("password");
+
+                // Adiciona apenas o primeiro registro encontrado para cada localização
+                if (!tempMap.containsKey(location)) {
+                    tempMap.put(location, password);
+                } else {
+                    System.out.printf("Duplicata removida: Localização = %s%n", location);
+                }
+            }
+
+            // Limpa e reescreve o mapa na memória
+            lockedChests.clear();
+            lockedChests.putAll(tempMap);
+
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Erro ao remover duplicatas.", e);
+        }
+    }
+
 
     // Método para salvar um bau no banco de dados
     private void saveLockedChest(String location, String password, String player) {
@@ -133,7 +190,7 @@ public class LockedChests {
             pstmt.setString(3, player);
             pstmt.executeUpdate();
 
-            System.out.printf(CHEST_SAVED_EN + "Location = %s, Player = %s%n", location, player);
+            System.out.printf(CHEST_SAVED_EN);
 
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, CHEST_SAVE_ERROR_EN, e);
