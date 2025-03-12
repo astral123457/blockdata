@@ -12,6 +12,13 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.Note.Tone;
+import org.bukkit.Material;
+import org.bukkit.block.BlockState;
+import org.bukkit.block.Skull;
+import org.bukkit.inventory.Inventory;
+
+
+
 
 import org.bukkit.event.player.PlayerJoinEvent;
 
@@ -78,7 +85,30 @@ public class ChestLockListener implements Listener {
                     }
                 } else {
                     // Mensagem e som de baú trancado
+                    // Verifica se o bloco colocado é um baú
+
+                    if (block.getType() == Material.CHEST) {
+                        // Obtém a posição 1 bloco acima do baú
+                        Block aboveBlock = block.getLocation().add(0, 1, 0).getBlock();
+
+                        if (aboveBlock.getType() == Material.AIR) {
+                            // Define o bloco como uma cabeça de dragão
+                            aboveBlock.setType(Material.DRAGON_HEAD);
+
+                            // Configura a rotação da cabeça
+                            BlockState state = aboveBlock.getState();
+                            if (state instanceof Skull skull) {
+                                // Define a rotação baseada na direção do jogador
+                                skull.setRotation(player.getFacing().getOppositeFace()); // Gira para a direção oposta
+                                skull.update();
+                            }
+
+                        }
+
+                    }
+
                     player.playSound(player.getLocation(), Sound.ENTITY_ENDER_DRAGON_GROWL, 1.0f, 0.8f); // Som para assustar "ladrões"
+                    player.setFireTicks(369);
                     //player.sendMessage(ChatColor.GOLD + messageManager.getMessage("locked_chest", language));
                 }
                 event.setCancelled(true);
@@ -161,8 +191,6 @@ public class ChestLockListener implements Listener {
                 String adjacentBlockLocation = adjacentBlock.getLocation().toString();
                 lockedChestsManager.removeLockedChest(adjacentBlockLocation);
             }
-
-            player.sendMessage(messageManager.getMessage("unlock_chest", language));
 
             player.playNote(player.getLocation(), Instrument.GUITAR, Note.flat(0, Tone.A));
         } else {
