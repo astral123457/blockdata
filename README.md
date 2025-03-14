@@ -13,35 +13,44 @@ Destranca o baú com uma senha vai precizar da etiqueta com a senha e quebra o b
 quem tranca o bau sempre ganha 2 chave 1 para dar ao amigo ou deixa guardada de reserva... 
 ![image](https://github.com/user-attachments/assets/0f2b775d-00ed-4ce8-bcf1-0a677736c415)
 
+# Fluxo Grama - Plugin de Tranca de Baús
 # Inicialização do Plugin:
 
-O plugin inicializa criando os arquivos config.json e messages.json (se não existirem) e configurando o banco de dados para armazenar informações dos baús trancados.
+# Quando o plugin é iniciado, ele:
 
-Idioma configurável via o config.json para personalizar mensagens.
+Cria os arquivos config.json e messages.json se ainda não existirem.
 
-# Gerenciamento de Baús Trancados:
+Configura a conexão com o banco de dados SQLite para persistir informações dos baús trancados.
 
-Um mapa central (em LockedChests) armazena os baús trancados em memória para rápido acesso.
+Registra os eventos e os comandos como lock, unlock e viewpassword.
 
-Atualização do banco de dados para persistência de dados, evitando perda de informações entre reinicializações.
+# Gerenciamento de Dados:
 
-Comandos (lock/unlock/viewpassword):
+A classe LockedChests mantém um mapa na memória dos baús trancados.
 
-lock: Tranca um baú com uma senha e cria uma etiqueta com essa senha.
+Os dados são sincronizados com o banco de dados SQLite para evitar perdas entre reinicializações.
 
-unlock: Destranca um baú ao validar a senha correta.
+# Comandos Personalizados:
 
-viewpassword: Permite visualizar a senha de um baú previamente trancado.
+/lock [senha]: Tranca um baú com a senha especificada e adiciona uma etiqueta com a senha.
 
-# Interações com Eventos:
+/unlock [senha]: Destranca um baú após validação da senha correta.
 
-Eventos como cliques ou destruição de baús são gerenciados para evitar violações (baús trancados não podem ser destruídos sem senha).
+/viewpassword: Permite ao jogador ver a senha de um baú trancado.
 
-Feedback interativo para jogadores com sons, mensagens e efeitos visuais (como fogo ou cabeças de dragão).
+Eventos Personalizados:
 
-# Mensagens Dinâmicas:
+# Interações com Baús:
 
-Integração com o MessageManager para garantir mensagens localizadas e personalizadas para o idioma do jogador.
+Se o jogador clicar em um baú trancado sem a etiqueta correta, receberá feedback sonoro, mensagens ou até efeitos como cabeças de dragão e fogo.
+
+# Destruição de Baús:
+
+Impede que baús trancados sejam destruídos até que sejam desbloqueados.
+
+# Mensagens Localizadas:
+
+Todos os feedbacks ao jogador (mensagens de sucesso, erro, dicas) são traduzidos para o idioma definido em config.json, graças à classe MessageManager
 
 
 
