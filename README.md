@@ -14,6 +14,30 @@ quem tranca o bau sempre ganha 2 chave 1 para dar ao amigo ou deixa guardada de 
 ![image](https://github.com/user-attachments/assets/0f2b775d-00ed-4ce8-bcf1-0a677736c415)
 
 # Fluxo Grama - Plugin de Tranca de Baús
+
+```mermaid
+graph TD;
+    Inicio-->Cria_Files_config.json_&_messages.json;
+    Inicio-->Conexão_SQLite;
+    Inicio-->Registra_Eventos;
+    Inicio-->Gerenciamento_de_Dados;
+
+    Inicio-->Comandos_Personalizados;
+    Inicio-->Interações_com_Baús;
+
+    Cria_Files_config.json_&_messages.json-->Fim;
+    Conexão_SQLite-->Fim;
+    Registra_Eventos-->Fim;
+    Gerenciamento_Dados-->Fim;
+
+    Comandos_Personalizados-->/lock;
+    Comandos_Personalizados-->/unlock;
+    Comandos_Personalizados-->/viewpassword;
+    /lock-->Fim;
+    /unlock-->Fim;
+    /viewpassword-->Fim;
+    Interações_com_Baús-->Fim;
+```
 # Inicialização do Plugin:
 
 # Quando o plugin é iniciado, ele:
