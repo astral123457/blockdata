@@ -7,8 +7,7 @@ commands:
   lock:
     description: 'Tranca o baú com uma senha'
     usage: /lock <senha>
-# Language altomat
-Support BR & EN
+# Languem Support BR, EN, ES, FR, DE
 
     
 Destranca o baú com uma senha vai precizar da etiqueta com a senha e quebra o bau no ato do destranque 
