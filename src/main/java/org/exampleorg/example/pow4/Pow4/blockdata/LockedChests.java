@@ -1,5 +1,7 @@
 package org.exampleorg.example.pow4.Pow4.blockdata;
 
+import org.bukkit.ChatColor;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -98,7 +100,6 @@ public class LockedChests {
     public void removeLockedChest(String location, String password) {
         // Remove do mapa na memória
         lockedChests.remove(location, password);
-        System.out.println("Bau removido do local: ");
         // Remove do banco de dados
         deleteLockedChestFromDatabase(location);
     }
