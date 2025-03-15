@@ -43,13 +43,29 @@ public class LockChestCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
 
-        String language = loadLanguage(); // Função do tradutor
+
         MessageManager messageManager = new MessageManager(); // Função do tradutor
 
         if (sender instanceof Player player) {
+            String language = player.getLocale().toLowerCase();
+            if (language.startsWith("pt")) {
+                language = "br";
+            } else if (language.startsWith("en")) {
+                language = "en";
+            } else if (language.startsWith("es")) {
+                language = "es";
+            } else if (language.startsWith("fr")) {
+                language = "fr";
+            } else if (language.startsWith("de")) {
+                language = "de";
+            } else {
+                language = "default"; // Idioma padrão caso não seja reconhecido
+            }
+
             Block block = player.getTargetBlockExact(5);
             if (block != null && block.getType() == Material.CHEST) {
                 Chest chest = (Chest) block.getState();
+
 
                 if (args.length > 0) { // Verifica se há argumentos antes de acessar args[0]
                     String password = args[0]; // Obtém a senha do primeiro argumento
@@ -64,24 +80,13 @@ public class LockChestCommand implements CommandExecutor {
                         );
                         player.sendMessage(ChatColor.LIGHT_PURPLE + message);
 
-                    } else if (label.equalsIgnoreCase("unlock")) {
-                        chestLockListener.unlockChest(player, chest, password);
-                        player.sendMessage(ChatColor.GREEN + "Baú destrancado com sucesso!");
                     }
-                } else if (label.equalsIgnoreCase("viewpassword")) {
-                    String chestPassword = chestLockListener.getChestPassword(chest);
-                    player.sendMessage(ChatColor.GREEN + "Baú viewpassword!");
-                    if (chestPassword != null) {
-                        player.sendMessage("A senha deste baú é: " + chestPassword);
-                    } else {
-                        player.sendMessage("Este baú não está trancado.");
-                    }
-                } else {
-                    player.sendMessage(ChatColor.RED + "Por favor, forneça uma senha.");
+                }  else {
+                    player.sendMessage(ChatColor.RED + messageManager.getMessage("provide_password", language));
                 }
                 return true;
             } else {
-                player.sendMessage("Olhe para um baú para trancá-lo, destrancá-lo ou ver a senha.");
+                player.sendMessage(ChatColor.RED + messageManager.getMessage("look_at_chest", language));
             }
         }
         return false;

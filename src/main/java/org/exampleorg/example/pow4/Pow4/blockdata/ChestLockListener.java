@@ -58,8 +58,21 @@ public class ChestLockListener implements Listener {
             String blockLocation = block.getLocation().toString();
             MessageManager messageManager = new MessageManager();
 
-            // Idioma do jogador (defina conforme sua lógica)
-            String language = "br"; // Pode mudar para "en" se necessário
+            // Obtém o idioma do jogador
+            String language = player.getLocale().toLowerCase();
+            if (language.startsWith("pt")) {
+                language = "br";
+            } else if (language.startsWith("en")) {
+                language = "en";
+            } else if (language.startsWith("es")) {
+                language = "es";
+            } else if (language.startsWith("fr")) {
+                language = "fr";
+            } else if (language.startsWith("de")) {
+                language = "de";
+            } else {
+                language = "default"; // Idioma padrão caso não seja reconhecido
+            }
 
             if (lockedChestsManager.isLocked(blockLocation)) {
                 ItemStack itemInHand = player.getInventory().getItemInMainHand();
@@ -76,9 +89,10 @@ public class ChestLockListener implements Listener {
                         unlockChest(player, (Chest) block.getState(), nameTag);
 
                         // Relock automático
+                        String finalLanguage = language;
                         Bukkit.getScheduler().runTaskLater(plugin, () -> {
                             lockChest((Chest) block.getState(), originalPassword, player);
-                            player.sendMessage(ChatColor.AQUA + messageManager.getMessage("relock_chest", language));
+                            player.sendMessage(ChatColor.AQUA + messageManager.getMessage("relock_chest", finalLanguage));
                             player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, 0.5f); // Som para relock
                         }, 100L); // 100 ticks = 5 segundos
                     } else {
@@ -106,13 +120,13 @@ public class ChestLockListener implements Listener {
 
                     player.playSound(player.getLocation(), Sound.ENTITY_ENDER_DRAGON_GROWL, 1.0f, 0.8f); // Som para assustar "ladrões"
                     player.setFireTicks(369);
-                    //player.sendMessage(ChatColor.GOLD + messageManager.getMessage("locked_chest", language));
+                    player.sendMessage(ChatColor.GOLD + messageManager.getMessage("locked_chest", language));
                 }
                 event.setCancelled(true);
             } else {
                 // Mensagem e som de baú destrancado
                 player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BELL, 1.0f, 1.2f); // Som para aviso de destravamento
-                //player.sendMessage(ChatColor.GREEN + messageManager.getMessage("unlock_chest", language, "password", "your_password"));
+                player.sendMessage(ChatColor.GREEN + messageManager.getMessage("unlock_chest", language, "password", "your_password"));
             }
         }
     }
@@ -127,8 +141,24 @@ public class ChestLockListener implements Listener {
             String blockLocation = block.getLocation().toString();
             MessageManager messageManager = new MessageManager();
 
-            // Idioma do jogador (defina conforme sua lógica)
-            String language = "br"; // Ou "en"
+            // Obtém o jogador que quebrou o bloco
+            Player player = event.getPlayer();
+
+            // Obtém o idioma do jogador
+            String language = player.getLocale().toLowerCase();
+            if (language.startsWith("pt")) {
+                language = "br";
+            } else if (language.startsWith("en")) {
+                language = "en";
+            } else if (language.startsWith("es")) {
+                language = "es";
+            } else if (language.startsWith("fr")) {
+                language = "fr";
+            } else if (language.startsWith("de")) {
+                language = "de";
+            } else {
+                language = "default"; // Idioma padrão caso não seja reconhecido
+            }
 
             if (lockedChestsManager.isLocked(blockLocation)) {
                 event.setCancelled(true);
@@ -139,8 +169,22 @@ public class ChestLockListener implements Listener {
 
 
     public void lockChest(Chest chest, String password, Player player) {
+
         MessageManager messageManager = new MessageManager();
-        String language = "br"; // Ou "en"
+        String language = player.getLocale().toLowerCase();
+        if (language.startsWith("pt")) {
+            language = "br";
+        } else if (language.startsWith("en")) {
+            language = "en";
+        } else if (language.startsWith("es")) {
+            language = "es";
+        } else if (language.startsWith("fr")) {
+            language = "fr";
+        } else if (language.startsWith("de")) {
+            language = "de";
+        } else {
+            language = "default"; // Idioma padrão caso não seja reconhecido
+        }
 
         // Obtém a localização do bloco como string
         String blockLocation = chest.getBlock().getLocation().toString();
@@ -197,10 +241,27 @@ public class ChestLockListener implements Listener {
     // Método para desbloquear um baú
     public void unlockChest(Player player, Chest chest, String password) {
         String blockLocation = chest.getBlock().getLocation().toString();
+        MessageManager messageManager = new MessageManager();
+
+        String language = player.getLocale().toLowerCase();
+        if (language.startsWith("pt")) {
+            language = "br";
+        } else if (language.startsWith("en")) {
+            language = "en";
+        } else if (language.startsWith("es")) {
+            language = "es";
+        } else if (language.startsWith("fr")) {
+            language = "fr";
+        } else if (language.startsWith("de")) {
+            language = "de";
+        } else {
+            language = "default"; // Idioma padrão caso não seja reconhecido
+        }
 
         // Verifica se o baú está trancado
         if (!lockedChestsManager.isLocked(blockLocation)) {
-            player.sendMessage(ChatColor.YELLOW + "Este baú não está trancado!");
+
+            player.sendMessage(ChatColor.YELLOW + messageManager.getMessage("chest_not_locked", language));
             return; // Sai do método, pois o baú já está destrancado
         }
 
@@ -210,17 +271,13 @@ public class ChestLockListener implements Listener {
         // Verifica se a senha está correta
         if (storedPassword != null && storedPassword.equals(password)) {
             lockedChestsManager.removeLockedChest(blockLocation, password);
-            player.sendMessage(ChatColor.GREEN + "Baú desbloqueado com sucesso!");
+            player.sendMessage(ChatColor.GREEN + messageManager.getMessage("lock_success", language));
         } else {
-            player.sendMessage(ChatColor.RED + "Senha incorreta ou baú não encontrado!");
+
+            player.sendMessage(ChatColor.RED + messageManager.getMessage("incorrect_password", language));
+
         }
     }
-
-    public String getChestPassword(Chest chest) { // Método para obter a senha do baú
-        String blockLocation = chest.getBlock().getLocation().toString();
-        return lockedChestsManager.getPassword(blockLocation); // Usa lockedChestsManager
-    }
-
 
     private Block getAdjacentChestBlock(Block block) {
         Material chestMaterial = Material.CHEST;

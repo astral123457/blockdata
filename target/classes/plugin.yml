@@ -10,19 +10,9 @@ commands:
   lock:
     description: 'Tranca o baú com uma senha'
     usage: /lock <senha>
-  unlock:
-    description: 'Destranca o baú com uma senha'
-    usage: /unlock <senha>
   reloadblockdata:
     description: Carrega todos os baús trancados do banco de dados
     usage: /reloadblockdata
     permission: admin.reloadblockdata
     permission-message: "Você não tem permissão para usar este comando."
-  viewpassword:
-    description: 'Permite ao administrador ver a senha do baú'
-    usage: /viewpassword
-    permission: viewpassword.use
-permissions:
-  viewpassword.use:
-    description: 'Permite administrador ver a senha caso esqueça'
-    default: op
+  
