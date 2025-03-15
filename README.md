@@ -31,11 +31,9 @@ graph TD;
     Gerenciamento_Dados-->Fim;
 
     Comandos_Personalizados-->/lock;
-    Comandos_Personalizados-->/unlock;
-    Comandos_Personalizados-->/viewpassword;
+
     /lock-->Fim;
-    /unlock-->Fim;
-    /viewpassword-->Fim;
+
     Interações_com_Baús-->Fim;
 ```
 # Inicialização do Plugin:
@@ -57,10 +55,6 @@ Os dados são sincronizados com o banco de dados SQLite para evitar perdas entre
 # Comandos Personalizados:
 
 /lock [senha]: Tranca um baú com a senha especificada e adiciona uma etiqueta com a senha.
-
-/unlock [senha]: Destranca um baú após validação da senha correta.
-
-/viewpassword: Permite ao jogador ver a senha de um baú trancado.
 
 Eventos Personalizados:
 
