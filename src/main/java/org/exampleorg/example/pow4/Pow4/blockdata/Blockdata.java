@@ -1,19 +1,27 @@
 package org.exampleorg.example.pow4.Pow4.blockdata;
 
+import com.google.gson.GsonBuilder;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Collections;
+import java.sql.PreparedStatement;
+
+
+
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import com.google.gson.GsonBuilder;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.Statement;
-
 
 public final class Blockdata extends JavaPlugin {
 
@@ -21,36 +29,61 @@ public final class Blockdata extends JavaPlugin {
     private static final String CONFIG_FILE = FOLDER_PATH + "/config.json";
     private static final String MESSAGES_FILE = FOLDER_PATH + "/messages.json";
 
+    private final Map<String, String> lockedChests = Collections.synchronizedMap(new HashMap<>());
+
+
+    private final LockedChests lockedChestsManager = new LockedChests();
+    private Connection connection;
 
     @Override
     public void onEnable() {
-        getLogger().info("Iniciando o plugin LockChestPlugin...");
+        getLogger().info("LockChestPlugin habilitado!");
 
-        createFolderAndFiles();
-        if (!isPluginEnabled()) {
+        createFolderAndConfig();
+        boolean isEnabled = loadPluginStatus();
+
+        if (!isEnabled) {
             getLogger().warning("Plugin desativado via configuração.");
             getServer().getPluginManager().disablePlugin(this);
-            return;
+            return; // Finaliza a inicialização se o plugin estiver desativado
         }
 
-        registerListeners(); // Registra eventos
-        registerCommands(); // Registra comandos
+        // Configuração do banco de dados
+        setupDatabaseConnection(); // Configura a conexão
+        setupDatabase(); // Cria a tabela se necessário
 
-        setupDatabase();
+        // Carrega os baús trancados do banco de dados
+        loadLockedChests(); // Certifique-se de que este método é chamado após as etapas acima
 
+
+
+        // Registra eventos e comandos
+        ChestLockListener chestLockListener = new ChestLockListener(this);
+        getServer().getPluginManager().registerEvents(chestLockListener, this);
+        this.getCommand("lock").setExecutor(new LockChestCommand(chestLockListener));
+        this.getCommand("unlock").setExecutor(new LockChestCommand(chestLockListener));
+        this.getCommand("viewpassword").setExecutor(new LockChestCommand(chestLockListener));
+
+
+        // Carregar idioma
         String language = loadLanguage();
-        getLogger().info("Idioma carregado: " + language);
-
-
+        getLogger().info("Idioma configurado: " + language);
     }
-
 
     @Override
     public void onDisable() {
-        getLogger().info("Desativando o plugin LockChestPlugin...");
+        getLogger().info("LockChestPlugin desabilitado!");
+        if (connection != null) {
+            try {
+                connection.close();
+                getLogger().info("Conexão com o banco de dados fechada.");
+            } catch (Exception e) {
+                getLogger().severe("Erro ao fechar a conexão: " + e.getMessage());
+            }
+        }
     }
 
-    private void createFolderAndFiles() {
+    private void createFolderAndConfig() {
         File folder = new File(FOLDER_PATH);
         if (!folder.exists() && folder.mkdirs()) {
             getLogger().info("Pasta de configuração criada em: " + FOLDER_PATH);
@@ -198,55 +231,72 @@ public final class Blockdata extends JavaPlugin {
         }
     }
 
-
-
-        private boolean isPluginEnabled() {
+    private boolean loadPluginStatus() {
         try {
             String content = new String(Files.readAllBytes(Paths.get(CONFIG_FILE)));
             JsonObject config = new Gson().fromJson(content, JsonObject.class);
             return config.get("enabled").getAsBoolean();
         } catch (IOException e) {
-            getLogger().severe("Erro ao ler config.json: " + e.getMessage());
+            getLogger().severe("Erro ao ler o arquivo config.json: " + e.getMessage());
         }
-        return false;
+        return false; // Desabilita o plugin em caso de erro
     }
 
-    private String loadLanguage() {
-        try {
-            String content = new String(Files.readAllBytes(Paths.get(CONFIG_FILE)));
-            JsonObject config = new Gson().fromJson(content, JsonObject.class);
-            return config.get("language").getAsString();
-        } catch (IOException e) {
-            getLogger().severe("Erro ao carregar o idioma do config.json: " + e.getMessage());
+    public String loadLanguage() {
+        File configFile = new File(CONFIG_FILE);
+        if (configFile.exists()) {
+            try {
+                String content = new String(Files.readAllBytes(Paths.get(CONFIG_FILE)));
+                JsonObject config = new Gson().fromJson(content, JsonObject.class);
+                return config.get("language").getAsString();
+            } catch (IOException e) {
+                getLogger().severe("Erro ao ler o arquivo config.json: " + e.getMessage());
+            }
         }
         return "br";
     }
 
-    private void registerListeners() {
-        getServer().getPluginManager().registerEvents(new ChestLockListener(this), this);
-        getLogger().info("Listeners registrados.");
-    }
-
-    private void registerCommands() {
-        this.getCommand("lock").setExecutor(new LockChestCommand(new ChestLockListener(this)));
-        this.getCommand("unlock").setExecutor(new LockChestCommand(new ChestLockListener(this)));
-
-        this.getCommand("reloadblockdata").setExecutor(this);
-
-        getLogger().info("Comandos registrados.");
+    private void setupDatabaseConnection() {
+        String DB_URL = "jdbc:sqlite:" + FOLDER_PATH + "/blockdata.db";
+        try {
+            connection = DriverManager.getConnection(DB_URL);
+            connection.createStatement().execute("PRAGMA busy_timeout = 3000;");
+            getLogger().info("Conexão com o banco de dados estabelecida.");
+        } catch (Exception e) {
+            getLogger().severe("Erro ao conectar ao banco de dados: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     private void setupDatabase() {
-        try (Connection conn = DriverManager.getConnection("jdbc:sqlite:" + FOLDER_PATH + "/blockdata.db");
-             Statement stmt = conn.createStatement()) {
-            String sql = "CREATE TABLE IF NOT EXISTS locked_chests (" +
-                    "location TEXT PRIMARY KEY, " +
-                    "password TEXT NOT NULL, " +
-                    "player TEXT NOT NULL)";
+        String sql = "CREATE TABLE IF NOT EXISTS locked_chests (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "location TEXT NOT NULL UNIQUE, " +
+                "password TEXT NOT NULL, " +
+                "player TEXT NOT NULL)";
+        try (Statement stmt = connection.createStatement()) {
             stmt.executeUpdate(sql);
-            getLogger().info("Banco de dados configurado com sucesso.");
+            getLogger().info("Tabela 'locked_chests' configurada com sucesso!");
         } catch (Exception e) {
-            getLogger().severe("Erro ao configurar o banco de dados: " + e.getMessage());
+            getLogger().severe("Erro ao configurar a tabela 'locked_chests': " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    public synchronized void loadLockedChests() {
+        String sql = "SELECT location, password FROM locked_chests";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                String location = rs.getString("location");
+                String password = rs.getString("password");
+                lockedChests.put(location, password); // Map now works correctly
+            }
+
+        } catch (Exception e) {
+            System.err.println("Erro ao carregar os baús: " + e.getMessage());
         }
     }
 

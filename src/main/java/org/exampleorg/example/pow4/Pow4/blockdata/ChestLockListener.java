@@ -27,6 +27,8 @@ public class ChestLockListener implements Listener {
 
     private boolean isLoaded = false;
 
+
+
     // Construtor da classe
     public ChestLockListener(JavaPlugin plugin) {
         this.lockedChestsManager = new LockedChests(); // Inicialize o gerenciador de baús trancados
@@ -44,6 +46,12 @@ public class ChestLockListener implements Listener {
         } else {
             System.out.println("Os baus ja estao carregados na memoria.");
         }
+    }
+
+
+    public String getChestPassword(Chest chest) {
+        String blockLocation = chest.getBlock().getLocation().toString();
+        return lockedChestsManager.getPassword(blockLocation);
     }
 
 
@@ -95,25 +103,26 @@ public class ChestLockListener implements Listener {
                             // Define o bloco como uma cabeça de dragão
                             aboveBlock.setType(Material.DRAGON_HEAD);
 
-
-
                         }
 
                     }
 
                     player.playSound(player.getLocation(), Sound.ENTITY_ENDER_DRAGON_GROWL, 1.0f, 0.8f); // Som para assustar "ladrões"
                     player.setFireTicks(369);
+                    player.getWorld().strikeLightning(player.getLocation());
                     player.sendMessage(ChatColor.GOLD + messageManager.getMessage("locked_chest", language));
                 }
                 event.setCancelled(true);
-            } else {
-                // Mensagem e som de baú destrancado
-                player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BELL, 1.0f, 1.2f); // Som para aviso de destravamento
-            }
+            } //else {
+            // player.sendMessage(ChatColor.GREEN + "🔋 Baú aberto! Use /lock <senha> para trancá-lo." + ChatColor.WHITE +"📶");
+            // player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_GUITAR, 1.0f, 1.2f);
+            // Mensagem e som de baú destrancado
+            //player.playSound(player.getLocation(), Sound.ENTITY_WITHER_SPAWN, 1.0f, 1.0f);
+            //player.sendMessage(ChatColor.GREEN + "🔋" +ChatColor.WHITE +"📶");
+            //player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BELL, 1.0f, 1.2f); // Som para aviso de destravamento
+            //}
         }
     }
-
-
 
 
     @EventHandler
@@ -126,7 +135,6 @@ public class ChestLockListener implements Listener {
             // Obtém o jogador que quebrou o bloco
             Player player = event.getPlayer();
 
-            // Obtém o idioma do jogador
             // Obtém o idioma do jogador
             String language = getPlayerLanguage(player);
 
@@ -217,32 +225,30 @@ public class ChestLockListener implements Listener {
 
 
 
-    // Método para desbloquear um baú
+    // Método para desbloquear um baú unlockChest(player, (Chest) block.getState(), nameTag);
     public void unlockChest(Player player, Chest chest, String password) {
         String blockLocation = chest.getBlock().getLocation().toString();
-        MessageManager messageManager = new MessageManager();
 
+        MessageManager messageManager = new MessageManager();
         // Obtém o idioma do jogador
         String language = getPlayerLanguage(player);
 
-        // Verifica se o baú está trancado
-        if (!lockedChestsManager.isLocked(blockLocation)) {
+        // Verifica e remove usando lockedChestsManager
+        if (lockedChestsManager.isLocked(blockLocation) && lockedChestsManager.getPassword(blockLocation).equals(password)) {
+            lockedChestsManager.removeLockedChest(blockLocation);
 
-            player.sendMessage(ChatColor.YELLOW + messageManager.getMessage("chest_not_locked", language));
-            return; // Sai do método, pois o baú já está destrancado
-        }
+            // Destranca o baú duplo, se houver
+            Block adjacentBlock = getAdjacentChestBlock(chest.getBlock());
+            if (adjacentBlock != null) {
+                String adjacentBlockLocation = adjacentBlock.getLocation().toString();
+                lockedChestsManager.removeLockedChest(adjacentBlockLocation);
+            }
 
-        // Obtém a senha associada ao baú
-        String storedPassword = lockedChestsManager.getPassword(blockLocation);
-
-        // Verifica se a senha está correta
-        if (storedPassword != null && storedPassword.equals(password)) {
-            lockedChestsManager.removeLockedChest(blockLocation, password);
-            player.sendMessage(ChatColor.GREEN + "w 93 " +messageManager.getMessage("lock_success", language));
+            //player.sendMessage("Baú destrancado com sucesso!");
+            player.sendMessage(ChatColor.DARK_GREEN + messageManager.getMessage("unlock_chest", language));
         } else {
-
-            player.sendMessage(ChatColor.RED + messageManager.getMessage("incorrect_password", language));
-
+            //player.sendMessage("Senha incorreta.");
+            player.sendMessage(ChatColor.DARK_RED + messageManager.getMessage("incorrect_password", language));
         }
     }
 
