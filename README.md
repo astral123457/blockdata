@@ -21,10 +21,9 @@ Minecraft command /lock 1233 or /unlock
           permission: admin.loadchests
           permission-message: "Você não tem permissão para usar este comando."
     
-# Language altomat
-Support BR & EN
+# Languem Support BR, EN, ES, FR, DE
 
-    
+
 Destranca o baú com uma senha vai precizar da etiqueta com a senha e quebra o bau no ato do destranque 
 quem tranca o bau sempre ganha 2 chave 1 para dar ao amigo ou deixa guardada de reserva... 
 ![image](https://github.com/user-attachments/assets/0f2b775d-00ed-4ce8-bcf1-0a677736c415)
