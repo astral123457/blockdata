@@ -1,12 +1,26 @@
 # Blockdata
 Plugin para trancar baú com uma senha e chave Minecraft spigot version 1.21.X Tranca o baú com uma senha Destranca o baú com uma senha Permite ao administrador ver a senha do baú Permite administrador ver a senha caso esqueça
 (obs: se alguem tentar abrirvem fogo e o mesmo que cai na lava!)
-Minecraft command /lock 1233
+
+Minecraft command /lock 1233 or /unlock
 
 commands:
   lock:
     description: 'Tranca o baú com uma senha'
     usage: /lock <senha>
+  unlock:
+    description: 'Destranca o baú com uma senha'
+    usage: /unlock <senha>
+  viewpassword:
+    description: 'Permite ao administrador ver a senha do baú'
+    usage: /viewpassword
+    permission: viewpassword.use
+  loadchests:
+    description: Carrega todos os baús trancados do banco de dados
+    usage: /loadchests
+    permission: admin.loadchests
+    permission-message: "Você não tem permissão para usar este comando."
+    
 # Language altomat
 Support BR & EN
 
@@ -33,8 +47,14 @@ graph TD;
     Gerenciamento_Dados-->Fim;
 
     Comandos_Personalizados-->/lock;
+    Comandos_Personalizados-->/unlock;
+    Comandos_Personalizados-->/viewpassword;
+    Comandos_Personalizados-->/loadchests;
 
     /lock-->Fim;
+    /unlock-->Fim;
+    /viewpassword-->Fim;
+    /loadchests-->Fim;
 
     Interações_com_Baús-->Fim;
 ```
@@ -57,6 +77,12 @@ Os dados são sincronizados com o banco de dados SQLite para evitar perdas entre
 # Comandos Personalizados:
 
 /lock [senha]: Tranca um baú com a senha especificada e adiciona uma etiqueta com a senha.
+
+/unlock [senha]: Destranca um baú com a senha especificada.
+
+/viewpassword Admin: Comando para caso alguem esqueça a senha e queira recuperar os itens (apenas o admin)
+
+/loadchests Admin: Comando para Debug e testes de reload (apenas o admin)
 
 Eventos Personalizados:
 
