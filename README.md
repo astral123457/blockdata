@@ -4,22 +4,22 @@ Plugin para trancar baú com uma senha e chave Minecraft spigot version 1.21.X T
 
 Minecraft command /lock 1233 or /unlock
 
-commands:
-  lock:
-    description: 'Tranca o baú com uma senha'
-    usage: /lock <senha>
-  unlock:
-    description: 'Destranca o baú com uma senha'
-    usage: /unlock <senha>
-  viewpassword:
-    description: 'Permite ao administrador ver a senha do baú'
-    usage: /viewpassword
-    permission: viewpassword.use
-  loadchests:
-    description: Carrega todos os baús trancados do banco de dados
-    usage: /loadchests
-    permission: admin.loadchests
-    permission-message: "Você não tem permissão para usar este comando."
+      commands:
+        lock:
+          description: 'Tranca o baú com uma senha'
+          usage: /lock <senha>
+        unlock:
+          description: 'Destranca o baú com uma senha'
+          usage: /unlock <senha>
+        viewpassword:
+          description: 'Permite ao administrador ver a senha do baú'
+          usage: /viewpassword
+          permission: viewpassword.use
+        loadchests:
+          description: Carrega todos os baús trancados do banco de dados
+          usage: /loadchests
+          permission: admin.loadchests
+          permission-message: "Você não tem permissão para usar este comando."
     
 # Language altomat
 Support BR & EN
