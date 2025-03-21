@@ -21,7 +21,8 @@ Minecraft command /lock 1233 or /unlock
           permission: admin.loadchests
           permission-message: "Você não tem permissão para usar este comando."
     
-# Languem Support BR, EN, ES, FR, DE
+# Languem Support
+BR, EN, ES, FR, DE RU, ZH, ZH-TW, JA KO, IT, NL, PL, SV, CS, HU, TR, AR, FI, DA
 
 
 Destranca o baú com uma senha vai precizar da etiqueta com a senha e quebra o bau no ato do destranque 
