@@ -1,5 +1,5 @@
 name: blockdata
-version: '1.0-SNAPSHOT'
+version: '2.3'
 main: org.exampleorg.example.pow4.Pow4.blockdata.Blockdata
 api-version: '1.21'
 prefix: BlockdData

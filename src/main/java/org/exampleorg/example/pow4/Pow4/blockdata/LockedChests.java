@@ -16,7 +16,9 @@ public class LockedChests {
     private boolean isLoaded = false; // Flag para rastrear se os baús já foram carregados
     public static final String CHESTS_LOADED_SUCCESS_EN = "All chests were successfully loaded into memory!";
     public static final String CHEST_SAVE_ERROR_EN = "Error saving the locked chest to the database.";
-
+    private static final String ANSI_RESET = "\u001B[0m";
+    private static final String ANSI_YELLOW = "\u001B[33m";
+    private static final String ANSI_RED = "\u001B[31m";
     // URL do banco de dados
     private static final String DB_URL = "jdbc:sqlite:plugins/blockdata/blockdata.db";
 
@@ -35,9 +37,9 @@ public class LockedChests {
         try {
             connection = DriverManager.getConnection(DB_URL);
             connection.createStatement().execute("PRAGMA busy_timeout = 3000;"); // Evita bloqueios
-            System.out.println("Conexão com o banco de dados estabelecida.");
+            System.out.println("[BlockdData]"+ANSI_YELLOW+" Conexao com o banco de dados restabelecida."+ANSI_RESET);
         } catch (Exception e) {
-            System.err.println("Erro ao conectar ao banco de dados: " + e.getMessage());
+            System.err.println("[BlockdData]"+ANSI_RED+"Erro ao conectar ao banco de dados: " + e.getMessage()+ ANSI_RESET);
             e.printStackTrace();
         }
     }
@@ -50,9 +52,9 @@ public class LockedChests {
                 "player TEXT NOT NULL)";
         try (Statement stmt = connection.createStatement()) {
             stmt.executeUpdate(sql);
-            System.out.println("Tabela 'locked_chests' configurada com sucesso!");
+            System.out.println("[BlockdData]"+ANSI_YELLOW+" Tabela 'locked_chests' configurada com sucesso!"+ ANSI_RESET);
         } catch (Exception e) {
-            System.err.println("Erro ao configurar o banco de dados: " + e.getMessage());
+            System.err.println("[BlockdData]"+ANSI_RED+" Erro ao configurar o banco de dados: "+ ANSI_RESET + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -87,9 +89,9 @@ public class LockedChests {
             pstmt.setString(2, password);
             pstmt.setString(3, player);
             pstmt.executeUpdate();
-            System.out.println("Baú salvo no banco de dados: " + location);
+            System.out.println("[BlockdData]"+ANSI_YELLOW+" Bau salvo no banco de dados: " + location + ANSI_RESET);
         } catch (Exception e) {
-            System.err.println("Erro ao salvar o baú trancado: " + e.getMessage());
+            System.err.println("[BlockdData]"+ANSI_RED+"Erro ao salvar o bau trancado: " + e.getMessage()+ ANSI_RESET);
             e.printStackTrace();
         }
     }
@@ -100,9 +102,9 @@ public class LockedChests {
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setString(1, location);
             pstmt.executeUpdate();
-            System.out.println("Baú removido do banco de dados: " + location);
+            System.out.println("[BlockdData]"+ANSI_YELLOW+" Bau removido do banco de dados: " + location + ANSI_RESET);
         } catch (Exception e) {
-            System.err.println("Erro ao remover o baú trancado: " + e.getMessage());
+            System.err.println("[BlockdData]"+ANSI_RED+"Erro ao remover o bau trancado: " + e.getMessage()+ ANSI_RESET);
             e.printStackTrace();
         }
     }
@@ -110,7 +112,7 @@ public class LockedChests {
     // Método para carregar baus do banco de dados na memória
     public void loadLockedChests() {
         if (isLoaded) {
-            System.out.println("Os baús já foram carregados anteriormente. O carregamento será ignorado.");
+            System.out.println("[BlockdData]"+ANSI_YELLOW+" Os baus ja foram carregados anteriormente. O carregamento sera ignorado."+ ANSI_RESET);
             return; // Sai do método, pois já foi carregado
         }
 
@@ -126,11 +128,11 @@ public class LockedChests {
                 if (!lockedChests.containsKey(location)) {
                     lockedChests.put(location, password);
                 } else {
-                    System.out.printf("A localização %s já existe no mapa.%n", location);
+                    System.out.printf("[BlockdData]"+ANSI_YELLOW+" A localizacao %s ja existe no mapa.%n"+ ANSI_RESET, location);
                 }
             }
 
-            System.out.println("Todos os itens foram processados com sucesso.");
+            System.out.println("[BlockdData]"+ANSI_YELLOW+" Todos os itens foram processados com sucesso."+ ANSI_RESET);
             System.out.println(CHESTS_LOADED_SUCCESS_EN);
             isLoaded = true; // Marca como carregado após o sucesso
 
@@ -157,7 +159,7 @@ public class LockedChests {
                 if (!tempMap.containsKey(location)) {
                     tempMap.put(location, password);
                 } else {
-                    System.out.printf("Duplicata removida: Localização = %s%n", location);
+                    System.out.printf("[BlockdData]"+ANSI_YELLOW+" Duplicata removida: Localizacao = %s%n"+ ANSI_RESET, location);
                 }
             }
 
@@ -166,7 +168,7 @@ public class LockedChests {
             lockedChests.putAll(tempMap);
 
         } catch (Exception e) {
-            System.out.printf( "Erro ao remover duplicatas.");
+            System.out.printf( "[BlockdData]"+ANSI_RED+" Erro ao remover duplicatas."+ ANSI_RESET);
         }
     }
 
@@ -175,9 +177,9 @@ public class LockedChests {
         if (connection != null) {
             try {
                 connection.close();
-                System.out.println("Conexão com o banco de dados fechada.");
+                System.out.println("[BlockdData]"+ANSI_YELLOW+" Conexao com o banco de dados fechada."+ ANSI_RESET);
             } catch (Exception e) {
-                System.err.println("Erro ao fechar a conexão: " + e.getMessage());
+                System.err.println("[BlockdData]"+ANSI_RED+" Erro ao fechar a conexao: "+ ANSI_RESET + e.getMessage());
                 e.printStackTrace();
             }
         }

@@ -27,6 +27,11 @@ public class ChestLockListener implements Listener {
 
     private boolean isLoaded = false;
 
+    private static final String ANSI_RESET = "\u001B[0m";
+    private static final String ANSI_YELLOW = "\u001B[33m";
+    private static final String ANSI_PURPLE = "\u001B[35m";
+    private static final String ANSI_RED = "\u001B[31m";
+
 
 
     // Construtor da classe
@@ -44,7 +49,7 @@ public class ChestLockListener implements Listener {
             lockedChestsManager.loadLockedChests();
             isLoaded = true; // Marca como carregado
         } else {
-            System.out.println("Os baus ja estao carregados na memoria.");
+            System.out.println(ANSI_YELLOW + "[BLOCKDATA] "+ANSI_PURPLE+"Os baus ja estao carregados na memoria." + ANSI_RESET);
         }
     }
 
@@ -219,21 +224,6 @@ public class ChestLockListener implements Listener {
             case "es" -> "es";
             case "fr" -> "fr";
             case "de" -> "de";
-            case "ru" -> "ru";
-            case "zh" -> "zh";
-            case "zh-tw" -> "zh-tw";
-            case "ja" -> "ja";
-            case "ko" -> "ko";
-            case "it" -> "it";
-            case "nl" -> "nl";
-            case "pl" -> "pl";
-            case "sv" -> "sv";
-            case "cs" -> "cs";
-            case "hu" -> "hu";
-            case "tr" -> "tr";
-            case "ar" -> "ar";
-            case "fi" -> "fi";
-            case "da" -> "da";
             default -> "default";
         };
     }
