@@ -101,3 +101,5 @@ Todos os feedbacks ao jogador (mensagens de sucesso, erro, dicas) são traduzido
 
 
 https://www.youtube.com/watch?v=QHVc5ROWEpA
+
+gradle build
