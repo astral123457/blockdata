@@ -1,0 +1,28 @@
+name: datablock
+version: 1.0
+main: com.datablock.Blockdata
+api-version: 1.19
+prefix: BlockdData
+authors: [AmauriBuenoDosSantos]
+description: 'Plugin para trancar baú com uma senha e chave'
+website: 'http://bzmgames.infinityfreeapp.com/?i=1'
+commands:
+  lock:
+    description: Comando para trancar baús
+    usage: /lock <senha>
+  unlock:
+    description: Destranca o baú com uma senha
+    usage: /unlock <senha>
+  viewpassword:
+    description: 'Permite ao administrador ver a senha do baú'
+    usage: /viewpassword
+    permission: viewpassword.use
+  loadchests:
+    description: Carrega todos os baús trancados do banco de dados
+    usage: /loadchests
+    permission: admin.loadchests
+    permission-message: "Você não tem permissão para usar este comando."
+permissions:
+  viewpassword.use:
+    description: 'Permite administrador ver a senha caso esqueça'
+    default: op
