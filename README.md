@@ -103,3 +103,5 @@ Todos os feedbacks ao jogador (mensagens de sucesso, erro, dicas) são traduzido
 https://www.youtube.com/watch?v=QHVc5ROWEpA
 
 gradle build
+
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/H2H411P12P)
